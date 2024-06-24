@@ -1,3 +1,9 @@
+// SuperConsoleRPG.Game/Scripts/GameEngine.cs
+using System;
+using System.Linq;
+using SuperConsoleRPG.Engine.Entities;
+using SuperConsoleRPG.Engine.Systems;
+
 namespace SuperConsoleRPG.Game.Scripts
 {
     public class GameEngine
@@ -30,7 +36,6 @@ namespace SuperConsoleRPG.Game.Scripts
             combatSystem = new CombatSystem();
             inventorySystem = new InventorySystem(player);
 
-            // Add some items to the inventory
             inventorySystem.AddItem(new Item("Healing Potion", "Restores 20 health.", new HealingEffect("Healing Potion", "Restores 20 health.", 20)));
             inventorySystem.AddItem(new Item("Attack Buff", "Increases attack by 5 for 3 turns.", new AttackBuffEffect("Attack Buff", "Increases attack by 5 for 3 turns.", 5, 3)));
             inventorySystem.AddItem(new Item("Defense Buff", "Increases defense by 5 for 3 turns.", new DefenseBuffEffect("Defense Buff", "Increases defense by 5 for 3 turns.", 5, 3)));
@@ -88,6 +93,8 @@ namespace SuperConsoleRPG.Game.Scripts
             var result = combatSystem.Fight(player, enemy);
             Console.WriteLine($"You dealt {result.DamageDealt} damage to {enemy.Name}!");
 
+            player.TickEffects();
+
             if (result.Winner != null)
             {
                 Console.WriteLine($"{result.Loser.Name} has been defeated!");
@@ -95,12 +102,14 @@ namespace SuperConsoleRPG.Game.Scripts
                 Console.WriteLine($"You gained {enemy.ExperienceReward} experience points!");
                 Console.WriteLine("Press any key to continue...");
                 Console.ReadKey();
-                Initialize(); // Reset the game for simplicity
+                Initialize();
             }
             else
             {
                 var enemyResult = combatSystem.Fight(enemy, player);
                 Console.WriteLine($"{enemy.Name} dealt {enemyResult.DamageDealt} damage to you!");
+
+                player.TickEffects();
 
                 if (enemyResult.Winner != null)
                 {
@@ -134,5 +143,29 @@ namespace SuperConsoleRPG.Game.Scripts
                 Console.WriteLine($"{i + 1}. {items[i].Name} - {items[i].Description}");
             }
 
-            var input =
+            var input = Console.ReadLine();
+            if (int.TryParse(input, out int itemIndex) && itemIndex > 0 && itemIndex <= items.Count)
+            {
+                var item = items[itemIndex - 1];
+                inventorySystem.UseItem(item);
+                player.AddEffect(item.Effect);
+                Console.WriteLine($"You used {item.Name}.");
+                Console.WriteLine("Press any key to continue...");
+                Console.ReadKey();
+            }
+            else
+            {
+                Console.WriteLine("Invalid selection. Press any key to continue...");
+                Console.ReadKey();
+            }
         }
+
+        private void RunAway()
+        {
+            Console.WriteLine("You ran away from the battle.");
+            Console.WriteLine("Press any key to continue...");
+            Console.ReadKey();
+            Initialize();
+        }
+    }
+}
