@@ -21,9 +21,14 @@ namespace SuperConsoleRPG.Engine.Systems
             items.Remove(item);
         }
 
+        public void UseItem(Item item)
+        {
+            item.Use(character);
+            RemoveItem(item);
+        }
+
         public void EquipItem(Equipment equipment)
         {
-            // For simplicity, let's assume a character can only equip one item at a time
             character.Attack += equipment.AttackBonus;
             character.Defense += equipment.DefenseBonus;
         }
